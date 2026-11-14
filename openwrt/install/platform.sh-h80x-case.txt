@@ -1,0 +1,49 @@
+	mercusys,h80x-v1)
+		# Écrire la banque inactive, puis le drapeau.
+		# U-Boot ne lit pas 0:BOOTCONFIG. Seule la chaîne "1" sélectionne
+		# rootfs_1. Absente, "0" ou toute autre valeur : argument 0, rootfs
+		# dans la branche de carte 2 / 0xB (tâche B).
+		# Pas de compteur. Un noyau qui démarre puis plante ne revient pas
+		# tout seul. La récupération est le httpd d'U-Boot, avant Linux.
+		# Limite : U-Boot lit d'abord boot_idx, prioritaire sur tp_boot_idx.
+		# Ce cas suppose boot_idx absente et ne le vérifie pas. Si elle existe,
+		# la banque active déduite ici peut être fausse : ne pas l'utiliser.
+		local tp active target
+
+		tp=$(fw_printenv -n tp_boot_idx 2>/dev/null)
+		case "$tp" in
+			1) active="rootfs_1"; target="rootfs" ;;
+			*) active="rootfs";   target="rootfs_1" ;;
+		esac
+
+		if [ -n "$UPGRADE_OPT_USE_CURR_PART" ]; then
+			CI_UBIPART="$active"
+		else
+			CI_UBIPART="$target"
+		fi
+
+		remove_oem_ubi_volume ubi_rootfs
+		remove_oem_ubi_volume wifi_fw
+		remove_oem_ubi_volume bt_fw
+		sync
+		if nand_do_flash_file "$1"; then
+			if [ -z "$UPGRADE_OPT_USE_CURR_PART" ]; then
+				if [ "$target" = "rootfs_1" ]; then
+					fw_setenv tp_boot_idx 1 || {
+						echo "failed to set tp_boot_idx"
+						nand_do_upgrade_failed
+					}
+				else
+					# nm_removeBootAlter efface la variable. "0" a le même
+					# effet sur le drapeau, l'effacement suit le firmware d'origine.
+					fw_setenv tp_boot_idx || {
+						echo "failed to clear tp_boot_idx"
+						nand_do_upgrade_failed
+					}
+				fi
+			fi
+			nand_do_upgrade_success
+		else
+			nand_do_upgrade_failed
+		fi
+		;;

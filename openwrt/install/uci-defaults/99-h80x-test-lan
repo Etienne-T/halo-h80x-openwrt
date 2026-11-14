@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: Etienne-T
+# SPDX-License-Identifier: MIT-0
+# Image de TEST H80X : le Halo est branche sur un reseau existant.
+# Pas de serveur DHCP/RA, et IP du LAN obtenue de la box (client DHCP).
+uci set dhcp.lan.ignore=1
+uci set dhcp.lan.ra=disabled
+uci set dhcp.lan.dhcpv6=disabled
+uci set network.lan.proto=dhcp
+uci -q delete network.lan.ipaddr
+uci -q delete network.lan.netmask
+uci commit dhcp
+uci commit network
+exit 0

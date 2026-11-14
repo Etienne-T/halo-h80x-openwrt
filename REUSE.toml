@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: Etienne-T
+# SPDX-License-Identifier: MIT-0
+version = 1
+
+[[annotations]]
+path = "openwrt/install/platform.sh-h80x-case.txt"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Etienne-T"
+SPDX-License-Identifier = "GPL-2.0-only"
+
+[[annotations]]
+path = "docs/photos/**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Etienne-T"
+SPDX-License-Identifier = "CC0-1.0"

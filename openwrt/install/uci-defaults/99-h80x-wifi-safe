@@ -1,0 +1,54 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: Etienne-T
+# SPDX-License-Identifier: MIT-0
+# Execute par boot (S10), apres kmodloader et avant le demarrage reseau.
+# wifi config genere la configuration sans activer les interfaces.
+# Aucune cle predefinie : 32 octets aleatoires, generes sur cet appareil.
+
+umask 077
+. /lib/functions.sh
+
+# Les deux radios ath11k peuvent finir leur detection apres kmodloader.
+attempt=0
+while [ "$attempt" -lt 30 ]; do
+	/sbin/wifi config >/dev/null 2>&1
+	[ "$(uci -q get wireless.default_radio0)" = wifi-iface ] &&
+		[ "$(uci -q get wireless.default_radio1)" = wifi-iface ] && break
+	attempt=$((attempt + 1))
+	sleep 1
+done
+
+failed=0
+[ "$attempt" -lt 30 ] || failed=1
+
+h80x_safe_iface() {
+	local section="$1" key
+	uci set "wireless.$section.disabled=1" || failed=1
+	uci set "wireless.$section.encryption=psk2" || failed=1
+	key=$(uci -q get "wireless.$section.key")
+	# Conserver la cle generee lors d'un precedent passage reussi.
+	case "$key" in
+		''|*[!0-9a-f]*) key= ;;
+	esac
+	if [ "${#key}" -ne 64 ]; then
+		key=$(hexdump -v -n 32 -e '/1 "%02x"' /dev/urandom)
+		if [ "${#key}" -ne 64 ]; then
+			failed=1
+			unset key
+			return
+		fi
+	fi
+	uci set "wireless.$section.key=$key" || failed=1
+	unset key
+}
+
+h80x_safe_radio() {
+	uci set "wireless.$1.country=DE" || failed=1
+}
+
+config_load wireless
+config_foreach h80x_safe_iface wifi-iface
+config_foreach h80x_safe_radio wifi-device
+uci commit wireless || failed=1
+# Un echec conserve ce script pour le prochain boot. Aucun wifi up/reload.
+exit "$failed"

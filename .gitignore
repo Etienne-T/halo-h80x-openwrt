@@ -1,0 +1,34 @@
+# SPDX-FileCopyrightText: Etienne-T
+# SPDX-License-Identifier: MIT-0
+# Private device material and generated firmware
+backup/
+backups/
+*backup*/
+downloads/
+work/
+images/
+results/
+board-files/
+*.bdf
+*.b[0-9a-f][0-9a-f]
+board.bin
+board-2.bin
+bdwlan*
+*.b24
+*.b60
+*.bin
+*.itb
+*.ubi
+*.ubifs
+*.img
+*.trx
+*.elf
+*.squashfs
+*.dtb
+*.zip
+*.tar*
+*.log
+*.part
+__pycache__/
+*.py[cod]
+.venv/

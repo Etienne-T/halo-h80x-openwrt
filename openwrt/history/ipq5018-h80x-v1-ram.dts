@@ -1,0 +1,443 @@
+// SPDX-FileCopyrightText: Etienne-T
+// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
+/*
+ * Mercusys Halo H80X v1 — DTS de TEST (initramfs en RAM uniquement).
+ *
+ * Basé sur ipq5018-mr80x-v2.dts (même SoC, switch RTL8367S, NAND F50D1G41LB),
+ * adapté d'après le DTB d'origine du H80X (FIT config@mp03.3) :
+ *  - UART : pas de pinctrl (GPIO 29 = LED bleue sur le H80X, pas UART TX) :
+ *    on garde le multiplexage fait par le bootloader ;
+ *  - reset du switch sur GPIO 39 (26 sur le MR80X) ;
+ *  - bouton reset GPIO 33, LEDs RGB 23/24/29, LEDs ports 25/26/27 ;
+ *  - 3 ports Ethernet (switch ports 0-2), CPU sur port 6 en SGMII ;
+ *  - partitions FIXES, toutes marquées en lecture seule sous ce noyau
+ *    (protection limitée à ce noyau : U-Boot ou un autre noyau peut écrire) ;
+ *  - Wi-Fi ath11k : IPQ5018 (2,4 GHz) + QCN6122 (5 GHz), voir en bas.
+ */
+
+/dts-v1/;
+
+#include "ipq5018.dtsi"
+#include "ipq5018-ess.dtsi"
+#include "ipq5018-qcn6122.dtsi"
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
+#include <dt-bindings/leds/common.h>
+#include <dt-bindings/net/qca-uniphy.h>
+
+/ {
+	model = "Mercusys Halo H80X v1";
+	compatible = "mercusys,h80x-v1", "qcom,ipq5018";
+
+	aliases {
+		led-boot = &led_status_green;
+		led-failsafe = &led_status_red;
+		led-running = &led_status_green;
+		led-upgrade = &led_status_blue;
+		serial0 = &blsp1_uart1;
+		ethernet1 = &gmac1;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+		/*
+		 * Le chargeur du firmware Wi-Fi (qcom-q6-mpd) a besoin d'un pool DMA
+		 * atomique plus grand : sans coherent_pool=2M -> « DMA pool exhausted
+		 * for pd-1 » et ath11k échoue (-12). Le firmware d'origine le passait aussi.
+		 */
+		bootargs-append = " coherent_pool=2M";
+	};
+
+	keys {
+		compatible = "gpio-keys";
+		pinctrl-0 = <&button_pins>;
+		pinctrl-names = "default";
+
+		reset-button {
+			label = "reset";
+			gpios = <&tlmm 33 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_RESTART>;
+		};
+	};
+
+	leds {
+		compatible = "gpio-leds";
+
+		led_status_red: status-red {
+			color = <LED_COLOR_ID_RED>;
+			function = LED_FUNCTION_STATUS;
+			gpios = <&tlmm 23 GPIO_ACTIVE_HIGH>;
+		};
+
+		led_status_green: status-green {
+			color = <LED_COLOR_ID_GREEN>;
+			function = LED_FUNCTION_STATUS;
+			gpios = <&tlmm 24 GPIO_ACTIVE_HIGH>;
+			default-state = "on";
+		};
+
+		led_status_blue: status-blue {
+			color = <LED_COLOR_ID_BLUE>;
+			function = LED_FUNCTION_STATUS;
+			gpios = <&tlmm 29 GPIO_ACTIVE_HIGH>;
+		};
+
+		lan1 {
+			color = <LED_COLOR_ID_GREEN>;
+			function = LED_FUNCTION_LAN;
+			function-enumerator = <1>;
+			gpios = <&tlmm 25 GPIO_ACTIVE_HIGH>;
+		};
+
+		lan2 {
+			color = <LED_COLOR_ID_GREEN>;
+			function = LED_FUNCTION_LAN;
+			function-enumerator = <2>;
+			gpios = <&tlmm 26 GPIO_ACTIVE_HIGH>;
+		};
+
+		lan3 {
+			color = <LED_COLOR_ID_GREEN>;
+			function = LED_FUNCTION_LAN;
+			function-enumerator = <3>;
+			gpios = <&tlmm 27 GPIO_ACTIVE_HIGH>;
+		};
+	};
+};
+
+/*
+ * IPQ5018 MAC0 -> GE Phy interne : non câblé (comme sur le MR80X).
+ * IPQ5018 MAC1 -> Uniphy SGMII -> RTL8367S port 6 (CPU).
+ * RTL8367S ports 0-2 -> les 3 prises RJ45.
+ * Le DTS d'origine déclare ce lien à 2500 (HSGMII) ; vitesse non mesurée.
+ * On reste en SGMII 1000, configuration retenue en amont pour le MR80X v2.
+ */
+
+&uniphy0 {
+	status = "okay";
+
+	assigned-clocks = <&uniphy0 UNIPHY_CLK_REF>;
+	assigned-clock-rates = <UNIPHY_REFCLK_25MHZ>;
+};
+
+&gmac1 {
+	status = "okay";
+
+	phy-mode = "sgmii";
+
+	fixed-link {
+		speed = <1000>;
+		full-duplex;
+	};
+};
+
+&mdio0 {
+	status = "okay";
+};
+
+&mdio1 {
+	status = "okay";
+
+	pinctrl-0 = <&mdio1_pins>, <&switch_reset_pins>;
+	pinctrl-names = "default";
+	reset-gpios = <&tlmm 39 GPIO_ACTIVE_LOW>;
+
+	/* RTL8367S: Linux detected the switch at MDIO address 29. */
+	switch1: ethernet-switch@1d {
+		compatible = "realtek,rtl8365mb";
+		reg = <29>;
+
+		mdio {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			rtl8367s_0: ethernet-phy@0 {
+				reg = <0>;
+			};
+
+			rtl8367s_1: ethernet-phy@1 {
+				reg = <1>;
+			};
+
+			rtl8367s_2: ethernet-phy@2 {
+				reg = <2>;
+			};
+		};
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+				label = "lan1";
+				phy-handle = <&rtl8367s_0>;
+			};
+
+			port@1 {
+				reg = <1>;
+				label = "lan2";
+				phy-handle = <&rtl8367s_1>;
+			};
+
+			port@2 {
+				reg = <2>;
+				label = "lan3";
+				phy-handle = <&rtl8367s_2>;
+			};
+
+			port@6 {
+				reg = <6>;
+				label = "cpu";
+				phy-mode = "sgmii";
+				ethernet = <&gmac1>;
+
+				fixed-link {
+					speed = <1000>;
+					full-duplex;
+				};
+			};
+		};
+	};
+};
+
+&sleep_clk {
+	clock-frequency = <32000>;
+};
+
+&xo_board_clk {
+	clock-div = <4>;
+	clock-mult = <1>;
+};
+
+/* Console : multiplexage laissé au bootloader (voir en-tête) */
+&blsp1_uart1 {
+	status = "okay";
+};
+
+&prng {
+	status = "okay";
+};
+
+&qfprom {
+	status = "okay";
+};
+
+&qpic_bam {
+	status = "okay";
+};
+
+&qpic_nand {
+	pinctrl-0 = <&qpic_pins>;
+	pinctrl-names = "default";
+	status = "okay";
+
+	/* SPI NAND ESMT F50D1G41LB (marking read on the chip, detected by Linux as ESMT), 128 MiB, ECC 4 bits / 512 (comme l'EAP650-Outdoor) */
+	nand@0 {
+		compatible = "spi-nand";
+		reg = <0>;
+		nand-ecc-engine = <&qpic_nand>;
+		nand-ecc-strength = <4>;
+		nand-ecc-step-size = <512>;
+		nand-bus-width = <8>;
+
+		/* Table relevée par « smeminfo » ; tout en lecture seule pour le test */
+		partitions {
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			partition@0 {
+				label = "0:SBL1";
+				reg = <0x0000000 0x0080000>;
+				read-only;
+			};
+
+			partition@80000 {
+				label = "0:MIBIB";
+				reg = <0x0080000 0x0080000>;
+				read-only;
+			};
+
+			partition@100000 {
+				label = "0:BOOTCONFIG";
+				reg = <0x0100000 0x0040000>;
+				read-only;
+			};
+
+			partition@140000 {
+				label = "0:BOOTCONFIG1";
+				reg = <0x0140000 0x0040000>;
+				read-only;
+			};
+
+			partition@180000 {
+				label = "0:QSEE";
+				reg = <0x0180000 0x0100000>;
+				read-only;
+			};
+
+			partition@280000 {
+				label = "0:DEVCFG";
+				reg = <0x0280000 0x0040000>;
+				read-only;
+			};
+
+			partition@2c0000 {
+				label = "0:CDT";
+				reg = <0x02c0000 0x0040000>;
+				read-only;
+			};
+
+			partition@300000 {
+				label = "0:APPSBLENV";
+				reg = <0x0300000 0x0080000>;
+				read-only;
+			};
+
+			partition@380000 {
+				label = "0:APPSBL";
+				reg = <0x0380000 0x0140000>;
+				read-only;
+			};
+
+			partition@4c0000 {
+				label = "0:ART";
+				reg = <0x04c0000 0x0100000>;
+				read-only;
+			};
+
+			partition@5c0000 {
+				label = "0:TRAINING";
+				reg = <0x05c0000 0x0080000>;
+				read-only;
+			};
+
+			partition@640000 {
+				label = "rootfs";
+				reg = <0x0640000 0x2a00000>;
+				read-only;
+			};
+
+			partition@3040000 {
+				label = "rootfs_1";
+				reg = <0x3040000 0x2a00000>;
+				read-only;
+			};
+
+			partition@5a40000 {
+				label = "0:ETHPHYFW";
+				reg = <0x5a40000 0x0080000>;
+				read-only;
+			};
+
+			partition@5ac0000 {
+				label = "factory_data";
+				reg = <0x5ac0000 0x0900000>;
+				read-only;
+			};
+
+			partition@63c0000 {
+				label = "runtime_data";
+				reg = <0x63c0000 0x1100000>;
+				read-only;
+			};
+		};
+	};
+};
+
+&tlmm {
+	button_pins: button-state {
+		pins = "gpio33";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-pull-up;
+	};
+
+	mdio1_pins: mdio-state {
+		mdc-pins {
+			pins = "gpio36";
+			function = "mdc";
+			drive-strength = <8>;
+			bias-pull-up;
+		};
+
+		mdio-pins {
+			pins = "gpio37";
+			function = "mdio";
+			drive-strength = <8>;
+			bias-pull-up;
+		};
+	};
+
+	switch_reset_pins: switch-reset-state {
+		pins = "gpio39";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-pull-down;
+	};
+
+	qpic_pins: qpic-state {
+		clock-pins {
+			pins = "gpio9";
+			function = "qspi_clk";
+			drive-strength = <8>;
+			bias-disable;
+		};
+
+		cs-pins {
+			pins = "gpio8";
+			function = "qspi_cs";
+			drive-strength = <8>;
+			bias-disable;
+		};
+
+		data-pins {
+			pins = "gpio4", "gpio5", "gpio6", "gpio7";
+			function = "qspi_data";
+			drive-strength = <8>;
+			bias-disable;
+		};
+	};
+};
+
+/*
+ * Wi-Fi (ath11k). Paramètres relevés dans le DTB d'origine du H80X :
+ *  - boot-args d'origine <1 4 2 15 0 0> : <index PCIe, longueur, userPD, GPIO reset, 0, 0>
+ *    -> QCN6122 sur PCIe 1, userPD 2, reset GPIO 15 (27 sur MR80X/RE700X) ;
+ *  - tgt-mem-mode 1 (512 Mo) ; board-id 0x24 (IPQ5018) et 0x60 (QCN6122).
+ * Adresses BDF / m3-dump : disposition standard OpenWrt en mode 1 (comme le RE700X).
+ * Calibration lue dans 0:ART (+0x1000 et +0x26800) par 11-ath11k-caldata.
+ */
+&q6v5_wcss {
+	status = "okay";
+
+	boot-args = <1 4 2 15 0 0>;
+};
+
+/* IPQ5018 interne : 2,4 GHz */
+&wifi {
+	status = "okay";
+
+	qcom,rproc = <&q6_wcss_pd1>;
+	qcom,calibration-variant = "Mercusys-Halo-H80X-v1";
+	qcom,ath11k-fw-memory-mode = <1>;
+	qcom,bdf-addr = <0x4c400000>;
+
+	ieee80211-freq-limit = <2400000 2483000>;
+};
+
+/* QCN6122 : 5 GHz */
+&wifi1 {
+	status = "okay";
+
+	qcom,rproc = <&q6_wcss_pd2>;
+	qcom,userpd-subsys-name = "q6v5_wcss_userpd2";
+	qcom,calibration-variant = "Mercusys-Halo-H80X-v1";
+	qcom,ath11k-fw-memory-mode = <1>;
+	qcom,bdf-addr = <0x4d100000>;
+	qcom,m3-dump-addr = <0x4df00000>;
+
+	ieee80211-freq-limit = <5150000 5730000>;
+};

@@ -1,0 +1,22 @@
+# SPDX-FileCopyrightText: Etienne-T
+# SPDX-License-Identifier: GPL-2.0-only
+# H80X profile for the historical OpenWrt base.
+# NAND sysupgrade tar without UbiFit was built on 13 November 2026.
+# HTTPS dependencies were added afterwards; a fresh build remains necessary.
+# BDFs may be supplied only to a private build; none are distributed here.
+
+define Device/mercusys_h80x-v1
+	$(call Device/FitImageLzma)
+	DEVICE_VENDOR := MERCUSYS
+	DEVICE_MODEL := Halo H80X
+	DEVICE_VARIANT := v1
+	SOC := ipq5018
+	DEVICE_DTS_CONFIG := config@mp03.3
+	BLOCKSIZE := 128k
+	PAGESIZE := 2048
+	NAND_SIZE := 128m
+	KERNEL_IN_UBI := 1
+	IMAGE_SIZE := 43008k
+	DEVICE_PACKAGES := kmod-dsa-rtl8365mb ath11k-firmware-ipq5018-qcn6122 libustream-mbedtls px5g-mbedtls
+endef
+TARGET_DEVICES += mercusys_h80x-v1
