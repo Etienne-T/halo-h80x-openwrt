@@ -30,6 +30,33 @@ case. The UART pads are accessible with the board still in the case.
 The owner thinks a small soldering iron could reach them without removing
 the board; this has not been verified.
 
+### Antenna mounting
+
+The photographs show two rectangular green PCB antennas, one on each of
+two opposite inner side walls beside the rear power and Ethernet openings.
+Their broad faces are parallel to the walls. Their long edges run from the
+case opening towards the closed end of the shell. Moulded plastic guides
+overlap their edges. Adhesive behind the antennas cannot be confirmed.
+
+One thin black coaxial cable is soldered to each antenna. The cables loop
+into the case and stay connected to the lifted board. Small metal tabs hold
+them near two gold-coloured board connectors. The connectors look like
+miniature snap-on RF connectors; their exact U.FL/IPEX type is unconfirmed.
+The photographs do not establish which antenna serves 2.4 GHz or 5 GHz.
+
+Disconnect power before lifting the board. Support it near the shell and
+watch both cables. Stop before either cable becomes taut. Do not pull on
+the cables, solder joints or connectors. Keep the coloured UART leads free
+as well; the loose-board photograph shows their black Dupont connectors.
+
+![Board and two cabled PCB antennas outside the case; handwritten and ambiguous stamped marks are masked](photos/PHOTO-13a.jpg)
+
+![Lifted board with both coaxial cables still connected to the antennas in the shell; a handwritten mark is masked](photos/PHOTO-13b.jpg)
+
+![Antenna positions and moulded edge guides on opposite inner side walls, beside the rear openings](photos/PHOTO-13c.jpg)
+
+### Chip access
+
 The IPQ5018, QCN6122 and RTL8367S are under shields with thermal pads. Their
 chip markings are not photographed here. A Russian-language
 [DNS Club review](https://club.dns-shop.ru/review/t-280-marshrutizatoryi/85194-obzor-domashnei-wi-fi-mesh-sistemyi-mercusys-halo-h80x-kompaktno/) shows a board with the

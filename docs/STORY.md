@@ -100,6 +100,33 @@ removing the board. This has not been verified.
 
 ![Second unit with the heat spreader fitted and the board still in the case](photos/PHOTO-03c.jpg)
 
+**Antenna mounting.** The photographs below show two rectangular green PCB
+antennas. One sits against each of two opposite inner side walls, next to
+the rear wall with the power and Ethernet openings. Their broad faces lie
+parallel to the side walls. Their long edges run from the case opening
+towards the closed end of the shell. Moulded plastic guides overlap the
+antenna edges. The photographs do not establish whether adhesive is also
+used behind them.
+
+Each antenna has one thin black coaxial cable soldered to it. The cables
+loop into the case and remain connected when the main board is lifted.
+On the main board, small metal tabs hold the cables near two gold-coloured
+connectors. These look like miniature snap-on RF connectors; the exact
+U.FL/IPEX type is not established by the photographs. The antenna-to-band
+assignment (2.4 GHz or 5 GHz) is also not established.
+
+Before lifting the board, disconnect power. Support the board close to the
+shell and watch both antenna cables. Stop before either cable becomes taut.
+Do not pull on the cables, their solder joints or the board connectors.
+The loose-board view also shows coloured UART wires ending in black Dupont
+connectors. Keep these wires free while moving the board.
+
+![Board outside the case, black heat spreader fitted, two cabled PCB antennas and UART leads; opaque masks cover handwritten and ambiguous stamped marks](photos/PHOTO-13a.jpg)
+
+![Board lifted beside the case, with both antenna cables still connected and one PCB antenna on each opposite side wall; a handwritten mark is masked](photos/PHOTO-13b.jpg)
+
+![Two PCB antennas held by moulded plastic guides on opposite side walls, beside the rear connector openings](photos/PHOTO-13c.jpg)
+
 ![Board face marked BOT, with the exposed NAND chip and shields](photos/PHOTO-04.jpg)
 
 ## 3. The main chips
