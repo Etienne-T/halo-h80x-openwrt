@@ -24,10 +24,9 @@
 ## In short
 
 - Since 13 November 2026, OpenWrt (snapshot of `main`, Linux 6.18) runs from
-  the flash of one H80X. It sits in the second firmware bank. According to the
+  the flash of one H80X, in the second firmware bank. According to the
   journal, the write targeted that bank, not the first bank that holds the
   stock firmware; the first bank was not read back after installation.
-
 - Seen working on the hardware: Ethernet through the RTL8367S switch (three
   ports), the status and port LEDs, the reset button at the electrical level,
   both Wi-Fi radios (2.4 GHz and 5 GHz, `ath11k` driver), and the unit's own
@@ -35,32 +34,23 @@
 - The only installation route demonstrated in this project uses the serial
   console. According to static analysis, the stock web page and the
   bootloader's recovery page only accept firmware signed by the vendor.
-
-- Main limits:
-  - The Wi-Fi board data files come from the stock firmware and may not be
-    redistributable, so Wi-Fi cannot be rebuilt from this repository alone.
-
-  - 5 GHz channels 100 and above are unavailable in the tested configuration.
-
-  - The link between the CPU and the switch runs at 1 Gbit/s.
-
-  - Going back to the stock firmware is documented but has never been tested
-    end to end.
+- Main limits: the Wi-Fi board data files come from the stock firmware and
+  may not be redistributable, so Wi-Fi cannot be rebuilt from this repository
+  alone; 5 GHz channels 100 and above are unavailable in the tested
+  configuration; the CPU–switch link runs at 1 Gbit/s; going back to the
+  stock firmware is documented but has never been tested end to end.
 
 ## 1. The device and the motivation
 
 The Halo H80X v1 is a mesh Wi-Fi unit sold by Mercusys, a TP-Link brand. Its
 stock firmware is a vendor system built on OpenWrt, with Linux 4.4.60 and a
-U-Boot 2016.01 bootloader built on 11 May 2022. The unit used
-here was running stock version 1.1.0 (Build 20220706) in both of its firmware
-banks.
+U-Boot 2016.01 bootloader built on 11 May 2022. The tested unit ran stock
+version 1.1.0 (Build 20220706) in both of its firmware banks.
 
 Searches made on 12 and 13 November 2026 found no OpenWrt pull request
 mentioning the H80X. The only OpenWrt forum thread found about it dates from
-2022 and ended without a result.
-
-The project notes give the intended end use: an OpenWrt access point with one
-VLAN per Wi-Fi network (SSID). That goal has not been validated yet.
+2022 and ended without a result. The intended end use, an OpenWrt access
+point with one VLAN per Wi-Fi network (SSID), has not been validated yet.
 
 ![Halo H80X v1, front panel and top vents](photos/PHOTO-01a.jpg)
 
@@ -100,26 +90,13 @@ removing the board. This has not been verified.
 
 ![Second unit with the heat spreader fitted and the board still in the case](photos/PHOTO-03c.jpg)
 
-**Antenna mounting.** The photographs below show two rectangular green PCB
-antennas. One sits against each of two opposite inner side walls, next to
-the rear wall with the power and Ethernet openings. Their broad faces lie
-parallel to the side walls. Their long edges run from the case opening
-towards the closed end of the shell. Moulded plastic guides overlap the
-antenna edges. The photographs do not establish whether adhesive is also
-used behind them.
-
-Each antenna has one thin black coaxial cable soldered to it. The cables
-loop into the case and remain connected when the main board is lifted.
-On the main board, small metal tabs hold the cables near two gold-coloured
-connectors. These look like miniature snap-on RF connectors; the exact
-U.FL/IPEX type is not established by the photographs. The antenna-to-band
-assignment (2.4 GHz or 5 GHz) is also not established.
-
-Before lifting the board, disconnect power. Support the board close to the
-shell and watch both antenna cables. Stop before either cable becomes taut.
-Do not pull on the cables, their solder joints or the board connectors.
-The loose-board view also shows coloured UART wires ending in black Dupont
-connectors. Keep these wires free while moving the board.
+**Antenna mounting.** Two cabled PCB antennas sit against opposite inner
+side walls, next to the rear connector openings. Their coaxial cables stay
+connected when the board is lifted: disconnect power first, stop before
+either cable becomes taut, and do not pull on the cables, solder joints,
+connectors or UART leads. [HARDWARE.md](HARDWARE.md#antenna-mounting)
+describes the mounting and what the photographs do not establish (connector
+type, antenna-to-band assignment, adhesive).
 
 ![Board outside the case, black heat spreader fitted, two cabled PCB antennas and UART leads; opaque masks cover handwritten and ambiguous stamped marks](photos/PHOTO-13a.jpg)
 
@@ -131,8 +108,6 @@ connectors. Keep these wires free while moving the board.
 
 ## 3. The main chips
 
-The table lists each part and how the project identified it.
-
 | Part | What | How it was identified |
 |---|---|---|
 | SoC | Qualcomm IPQ5018, two cores, 512 MiB RAM; reference design AP-MP03.3 (`machid 0x8040002`) | Bootloader output and prompt (`IPQ5018#`) |
@@ -141,27 +116,24 @@ The table lists each part and how the project identified it.
 | 2.4 GHz Wi-Fi | Radio built into the IPQ5018 | Stock device tree, then `ath11k` |
 | 5 GHz Wi-Fi | Qualcomm QCN6122, started by the SoC's Q6 co-processor (not a PCIe device seen by Linux) | Stock device tree, then `ath11k` |
 
-Linux detects the flash chip as an ESMT SPI-NAND, in two separate boot logs.
-The marking read on the chip of the first unit shows **ESMT F50D1G41LB**,
-consistent with Linux detection. Early project notes attributed the flash to
-GigaDevice. That attribution matches the DNS Club review cited in section 2:
-its author reports a 128 MB GigaDevice NAND (written `5F1GQ5REY1G`) and
-Zentel `A3T4GF40BBF-HP` RAM on the unit they opened. The marking is not
-legible at the resolution of the saved copy of that review, so this project
-has not checked it. **The flash chip may therefore differ between production
-batches. This port was tested only with the ESMT part**; a unit with another
-flash chip is untested, and the bootloader's flash identification should be
-checked before any write.
-The exact switch variant (RTL8367S rather than another member of the family)
-is inferred from the driver and the stock files, not read from the chip. The
-same review names the switch as RTL8367S.
-The IPQ5018, QCN6122 and RTL8367S are under shields with thermal pads.
-There are no photographs of their chip markings.
+Linux detects the flash as an ESMT SPI-NAND in two separate boot logs, and
+the first unit's chip marking reads **ESMT F50D1G41LB**. Early project notes
+said GigaDevice, as does the DNS Club review for the unit its author opened
+([HARDWARE.md](HARDWARE.md#chip-access) quotes its NAND and Zentel RAM
+markings). That marking is not legible in the saved copy of the review, so
+this project has not checked it. **The flash chip may therefore differ
+between production batches. This port was tested only with the ESMT part**;
+a unit with another flash chip is untested, and the bootloader's flash
+identification should be checked before any write.
 
-The stock device tree also declares a slot for a third radio (a QCN9000 on
-PCIe). It is disabled.
+The switch variant (RTL8367S rather than another member of the family) is
+inferred from the driver and the stock files, not read from the chip; the
+review names the same part. The IPQ5018, QCN6122 and RTL8367S are under
+shields with thermal pads, and their markings were not photographed. The
+stock device tree also declares a disabled slot for a third radio (a QCN9000
+on PCIe).
 
-Board signals that were confirmed on the running hardware:
+Board signals confirmed on the running hardware:
 
 | Signal | GPIO |
 |---|---|
@@ -176,36 +148,33 @@ works with this setting, but its reset function was not tested on its own.
 
 ## 4. The serial console
 
-The serial console was reached with a USB-serial board using an FTDI FT232RNL
-chip, attached to a Linux machine, at **115200 baud, 8N1**. Both directions work. A small script
-(`tools/tx_test.py`) was used to check the transmit wire on its own.
+The console runs at **115200 baud, 8N1**. It was reached with a USB-serial
+board using an FTDI FT232RNL chip, attached to a Linux machine. Both
+directions work; `tools/tx_test.py` checks the transmit wire on its own.
 
-**Logic level.** On the first unit, with the board powered, the owner
-measured with a multimeter about **1.8 V** between `GND` and `TX`, with a
-slight variation, and **3.3 V** between `GND` and `VCC`. A multimeter
-averages the signal while the board transmits, so the variation is expected;
-when the reading was taken relative to serial activity was not recorded. The
-second unit was not measured. The `TX` reading matches the adapter's `1V8`
-jumper setting seen in the photo. `VCC` is a supply pad, not the logic level.
-No separate level adaptation is used, and **3.3 V logic has not been
-validated**.
+**Logic level.** On the first unit, with the board powered, the owner's
+multimeter read about **1.8 V** between `GND` and `TX`, with a slight
+variation, and **3.3 V** between `GND` and `VCC`. A multimeter averages the
+signal while the board transmits, so the variation is expected; when the
+reading was taken relative to serial activity was not recorded. The second
+unit was not measured. The `TX` reading matches the adapter's `1V8` jumper.
+No separate level adaptation is used. **3.3 V logic has not been validated.**
 
-**Pinout.** Both boards have four pads labelled `GND`, `VCC`, `RX`, `TX`.
-With the labels upright in the close-ups below, that is their left-to-right
-order. The second view shows the pads with the board still in the case.
-Do not connect the `VCC` pad or adapter VCC. Wire `GND` to `GND`, board
-`TX` to adapter `RXD` and board `RX` to adapter `TXD`. Check the labels and
-measure the pad voltage on your own unit before wiring it. The bench photograph documents
-the equipment used; it does not verify each wire or its electrical level.
+**Pinout.** Both boards have four pads labelled `GND`, `VCC`, `RX`, `TX`, in
+that left-to-right order with the labels upright in the close-ups below. The
+second view shows the pads with the board still in the case. Do not connect
+the `VCC` pad (a supply, not the logic level) or adapter VCC. Wire `GND` to
+`GND`, board `TX` to adapter `RXD` and board `RX` to adapter `TXD`. Check the
+labels and measure the pad voltage on your own unit before wiring it. The
+bench photograph documents the equipment used; it does not verify each wire
+or its electrical level.
 
-One detail matters for the device tree. On the reference design, GPIO 29
-can carry the UART transmit line. On the H80X it drives the blue status LED.
-For that reason the OpenWrt device tree does not set the UART pin function. It
-keeps the setting made by the bootloader.
-
-Under the stock firmware, the Linux console prints `Please press Enter to
-activate this console`. According to the stock `inittab`, a login program
-follows. That console was never used interactively in this project.
+On the reference design, GPIO 29 can carry the UART transmit line. On the
+H80X it drives the blue status LED, so the OpenWrt device tree does not set
+the UART pin function and keeps the bootloader's setting. Under the stock
+firmware, the console prints `Please press Enter to activate this console`,
+followed by a login program according to the stock `inittab`. That console
+was never used interactively.
 
 ![First unit UART pads, labelled GND, VCC, RX, TX from left to right](photos/PHOTO-09a.jpg)
 
@@ -215,76 +184,60 @@ follows. That console was never used interactively in this project.
 
 ## 5. Stopping U-Boot
 
-At power-on, the bootloader prints `Enter magic string to stop autoboot in 1
-seconds`. The magic string is **`tpl`**. Once it is accepted, you get the
-`IPQ5018#` prompt.
+At power-on, U-Boot prints `Enter magic string to stop autoboot in 1
+seconds`. The magic string is **`tpl`**; it gives the `IPQ5018#` prompt.
+Typing it within one second by hand is unreliable. Start
+`tools/stop_uboot.py` first, then power-cycle the device. The script waits
+for the U-Boot banner, sends `tpl` repeatedly for up to six seconds, and
+reports a failure if it sees the kernel start instead.
 
-Typing three letters in one second by hand is unreliable, so the project uses
-a script, `tools/stop_uboot.py`. You start the script first and then
-power-cycle the device. The script waits for the U-Boot banner, sends `tpl`
-over and over for up to six seconds, and reports a failure if it sees the
-kernel start instead.
+On this unit, the secure boot fuse is **not** enabled (U-Boot's own check
+reports it). The U-Boot environment only contained `baudrate` and
+`has_default_mac`; the bank-selection variable `tp_boot_idx` (section 10)
+was absent.
 
-Two facts from the first session shaped what came next:
-
-- the secure boot fuse of this unit is **not** enabled (U-Boot's own check
-  reports it);
-- the U-Boot environment only contained `baudrate` and `has_default_mac`. The
-  bank-selection variable discussed later, `tp_boot_idx`, was absent.
-
-During the RAM-test sessions, the project rule was to change U-Boot variables
-only in RAM with `setenv`, never with `saveenv`. This is a stated rule; no
-complete command log proves it. The U-Boot environment was changed
-persistently once, during the authorised installation of 13 November 2026,
-when the upgrade script set the bank flag (section 10).
+During the RAM tests, the project rule was to change U-Boot variables only in
+RAM with `setenv`, never with `saveenv`. This is a stated rule; no complete
+command log proves it. The U-Boot environment was changed persistently once,
+when the authorised installation of 13 November 2026 set the bank flag
+(section 10).
 
 ## 6. Backing up the NAND
 
-Nothing was changed before a full copy of the flash existed. The method:
+Nothing was changed before a full copy of the flash existed. U-Boot read the
+128 MiB NAND into RAM in eight 16 MiB chunks, computed a CRC32 of each chunk,
+and sent each one to a PC over TFTP (`tftpput`).
 
-1. In U-Boot, read the 128 MiB NAND into RAM in eight 16 MiB chunks.
-2. Compute a CRC32 of each chunk in U-Boot.
-3. Send each chunk to a PC over TFTP (`tftpput`).
+This U-Boot's TFTP client always talks to port 69, rejects replies that do
+not come from port 69, and insists on option negotiation (`blksize 1468`,
+`timeout 5`). Common TFTP servers did not cope, so the project wrote
+`tools/tftp_server.py`, which both sends and receives. The receiving
+machine's firewall must allow the transfers; here a second machine with
+temporary firewall rules received them.
 
-This U-Boot's TFTP client is unusual: it always talks to port 69, rejects
-replies that do not come from port 69, and insists on option negotiation
-(`blksize 1468`, `timeout 5`). Common TFTP servers did not cope. The project
-therefore wrote its own server, `tools/tftp_server.py`, which both sends and
-receives. The Linux machine attached to the UART could not
-receive the transfers: its firewall could not be opened without an
-interactive password. A second machine received them instead, with temporary
-firewall rules.
-
-**Checks.**
-
-- According to the journal, the CRC32 of each of the eight chunks matched
-  between U-Boot and the PC. A later check matched the files against the CRC
-  values recorded by the session script. The U-Boot console output itself was
-  not re-examined independently.
-- The project's original `tools/verify_split.py` refused to assemble the image
-  if any chunk had the wrong size or CRC. It then built the 128 MiB image, cut
-  it into one file per partition, and wrote a SHA-256 manifest. That version
-  contained check values specific to this backup. The public repository ships
-  a generic replacement that takes a manifest supplied by the user; see
-  `docs/TOOLS.md`.
-- A content check confirmed that the bootloader is present in its partition
-  and that the Wi-Fi calibration partition is not empty.
-- A later local check matched all 18 manifest entries and the assembled
-  image. In both firmware banks, the kernel image and the SquashFS root were
-  identical to the public 1.1.0 package.
+**Checks.** According to the journal, the CRC32 of each chunk matched
+between U-Boot and the PC; a later check matched the files against the CRC
+values recorded by the session script, but the U-Boot console output itself
+was not re-examined independently. The original `tools/verify_split.py`
+(with check values specific to this backup) refused to assemble the image on
+a wrong chunk size or CRC, then cut it into one file per partition with a
+SHA-256 manifest; the public repository ships a generic version that takes a
+user-supplied manifest (see `docs/TOOLS.md`). The bootloader is present in
+its partition, and the calibration partition is not empty. A later local
+check matched all 18 manifest entries and the assembled image; in both
+banks, the kernel image and the SquashFS root were identical to the public
+1.1.0 package.
 
 **Limits.**
 
 - `nand read` returns ECC-corrected data **without the spare (OOB) area**. The
-  backup is not a raw physical copy of the chip. It is intended
-  for a restore from U-Boot, but that use has never been tested.
-
+  backup is not a raw physical copy of the chip. It is intended for a restore
+  from U-Boot.
 - **A restore has never been tried.** A second, independent copy of the
   backup is not documented either.
 - The `factory_data` partition holds the unit's identifiers and a **private
-  RSA key**. The backup therefore stays on the owner's machine. It is
-  excluded from version control and is not published, quoted or summarised
-  anywhere.
+  RSA key**. The backup therefore stays on the owner's machine, outside
+  version control, and is not published, quoted or summarised anywhere.
 
 The flash layout, as read from the bootloader and later from Linux:
 
@@ -305,18 +258,16 @@ The flash layout, as read from the bootloader and later from Linux:
 
 ### Booting the stock kernel from RAM
 
-The first test checked the RAM-boot method itself, without any deliberate
-write to the flash. The stock kernel volume was extracted from the backup with
-`tools/ubi_extract.py` and loaded over TFTP to `0x44000000`. Its CRC was
-checked, and it was started with `bootm 0x44000000#config@mp03.3`. The stock
-system booted completely, Wi-Fi included. The kernel ran from RAM and no
-firmware bank was deliberately rewritten. The stock system still mounted its
-root filesystem from the flash, so internal writes by the stock firmware
-cannot be ruled out. The final kernel command line contained
-`swiotlb=1 coherent_pool=2M`. These two parameters come from the
-`bootargs-append` property of the stock device tree, which the kernel
-processes; that detail mattered later. The test also gave a
-usable RAM window: images can be loaded between `0x44000000` and about
+The first test checked the RAM-boot method without any deliberate write to
+the flash. The stock kernel volume, extracted from the backup with
+`tools/ubi_extract.py`, was loaded over TFTP to `0x44000000`, CRC-checked,
+and started with `bootm 0x44000000#config@mp03.3`. The stock system booted
+completely, Wi-Fi included. It still mounted its root filesystem from the
+flash, so internal writes by the stock firmware cannot be ruled out.
+
+Its kernel command line contained `swiotlb=1 coherent_pool=2M`, added by the
+`bootargs-append` property of the stock device tree; Wi-Fi needs the second
+parameter (section 8). Images can be loaded between `0x44000000` and about
 `0x4A800000`, below the relocated U-Boot at `0x4A920000`.
 
 ### What the stock files reveal
@@ -331,117 +282,119 @@ tree, without disassembling any driver:
 - start parameters for the QCN6122, including its reset line on GPIO 15.
 
 The stock Wi-Fi firmware is `WLAN.HK.2.5.r4-00622`. The proprietary
-`qca-wifi` drivers that go with it cannot be used with a 6.x kernel.
- The stock device tree was decompiled with `tools/dtb2dts.py` and
-kept as a reference.
+`qca-wifi` drivers that go with it cannot be used with a 6.x kernel. The
+stock device tree, decompiled with `tools/dtb2dts.py`, was kept as a
+reference.
 
 ### Can it be installed without opening the case? Not with any method demonstrated so far
 
-**The stock web page.** The local-upgrade page hands the uploaded file to the
-stock updater, `nvrammanager`, which checks it and then writes it.
- Part of that updater's image check is shared with OpenWrt's
-`mercusys-fwup.py`, the tool that builds installable images for the Mercusys
-MR80X v2. The first hypothesis was therefore that the MR80X method would work
-here too.
-
-Static analysis of the H80X updater ruled this out. As far as that analysis
-goes, writing an image requires a valid vendor RSA signature, so the MR80X
-method cannot be used with the H80X installer studied. No installation of
-such an image was attempted. When the updater does accept a
-signed image, it writes the inactive bank and then sets `tp_boot_idx`.
+**The stock web page** hands the file to the stock updater, `nvrammanager`,
+which checks and writes it. Part of that check is shared with OpenWrt's
+`mercusys-fwup.py`, which builds installable images for the MR80X v2. But
+static analysis of the H80X updater found that, as far as that analysis
+goes, writing requires a valid vendor RSA signature, so the MR80X method
+cannot be used with the H80X installer studied. No such installation was
+attempted. A signed image is written to the inactive bank, then
+`tp_boot_idx` is set.
 
 **Older stock firmware.** The public versions that can be unpacked (1.0.0,
-1.1.0, 1.1.1, 1.1.3) all carry the same `nvrammanager`, byte for byte.
- The updater refuses to go back to an older major or minor version,
-so 1.0.0 would be refused anyway. Version 1.1.2 was published for
-Singapore only. The tools and probes used could not extract its content,
-which looks random. The known check of the Linux updater studied fails on the
-raw file. Its updater is therefore unknown. The firmware file
-published for the sister model Halo H3000X (1.1.1) is byte-identical to the
-H80X 1.1.1 file, so it brings nothing new.
+1.1.0, 1.1.1, 1.1.3) carry the same `nvrammanager`, byte for byte. The
+updater refuses an older major or minor version, so 1.0.0 would be refused
+anyway. Version 1.1.2,
+published for Singapore only, could not be extracted with the tools and
+probes used: its content looks random and the known check of the Linux
+updater fails on the raw file, so its updater is unknown. The Halo H3000X
+1.1.1 file is byte-identical to the H80X 1.1.1 file.
 
 **The bootloader's recovery page.** Holding the reset button at power-on
-starts a small web server inside U-Boot, before Linux. Static analysis ties
-that button to GPIO 33, the same input Linux sees as the reset button: the
-GPL source defines the recovery key as GPIO 33, and the register address
-tested by the actual binary matches it. The GPL source and the strings in the
-binary also agree on the page's behaviour. The page keeps the upload in RAM.
-It checks an MD5 and an RSA signature (128-byte signature, so RSA-1024,
-against a public key built into U-Boot) **before** any write. On failure it
-shows an error and writes nothing. This recovery path has never been
-exercised on the hardware. On success, it writes the bank
-opposite the current one and updates `tp_boot_idx`. This is a
-way back to signed stock firmware. It cannot install OpenWrt.
+starts a small web server in U-Boot, before Linux. The GPL source defines the
+recovery key as GPIO 33 (the Linux reset button), and the register address
+tested by the binary matches. Source and binary strings agree: the page keeps
+the upload in RAM and checks an MD5 and an RSA signature (128 bytes, so
+RSA-1024, against a public key built into U-Boot) **before** any write. On
+failure it writes nothing; on success it writes the bank opposite the current
+one and updates `tp_boot_idx`. This path has never been exercised on the
+hardware. It is a way back to signed stock firmware; it cannot install
+OpenWrt.
 
-**Administration services on the stock firmware.** Administration components
-are present in the stock image. Their actual accessibility, and any
-installation route through them, have not been validated. Testing passwords
-and bypassing authentication were deliberately out of scope.
+**Administration services.** Administration components are present in the
+stock image. Apart from the SSH server observed on one unit (next
+subsection), their accessibility has not been validated, and no
+installation route through them has been found. Testing passwords and
+bypassing authentication were deliberately out of scope.
 
 **Conclusion.** A later survey of the methods used on related TP-Link and
-Mercusys devices reached the same verdict. Installing without the serial
-console is unlikely as things stand, though not ruled out in principle. The
-only installation route demonstrated in this project uses the serial
-console.
+Mercusys devices reached the same verdict: installing without the serial
+console is unlikely as things stand, though not ruled out in principle.
+
+### An SSH server in the stock firmware
+
+On the tested Halo, running Mercusys firmware, an SSH server answered on
+**TCP port 20001**, not 22. Its banner was `SSH-2.0-dropbear`. When queried
+for the `root` account, without sending a password or opening a shell, it
+offered the `publickey` and `password` methods. Its host key was a
+**512-bit RSA key** (`ssh-rsa`), which modern SSH clients refuse. No login
+was attempted or obtained. This is a historical observation and was not
+retested. Nothing shows that every Halo exposes this service.
+
+In the firmware, the shipped `/etc/config/dropbear` sets `Port 20001`,
+`PasswordAuth on` and `RootPasswordAuth on`. Analysis of firmware 1.1.0
+identifies Dropbear 2019.78. The network banner gives no version, so the
+version actually running is not confirmed. The init script alone does not
+start a daemon with the shipped configuration. Which component starts the
+observed server is not established.
+
+The root entry in `/etc/shadow` is identical in the four stock firmware
+versions examined (1.0.0 to 1.1.3). It is also identical to the hash quoted
+in a [public Reddit thread](https://www.reddit.com/r/hacking/comments/fsh9qx/cracking_a_hash_with_a_strange_salt/)
+about a TP-Link Deco M9+. Commenters there report the same value on other
+TP-Link products. This project did not try to recover the password and did
+not log in.
 
 ## 8. The port
 
 ### Starting point
 
-The work is based on OpenWrt `main` at commit `30a23ae451` (r38212), with
-Linux 6.18.60 and the target `qualcommax/ipq50xx`. Two devices
-already supported by OpenWrt served as references:
+The port is based on OpenWrt `main` at commit `30a23ae451` (r38212), with
+Linux 6.18.60 and the target `qualcommax/ipq50xx`. Two supported devices
+served as references: the **Mercusys MR80X v2** (same SoC, switch and flash,
+but 256 MiB of RAM; its upstream support leaves Wi-Fi disabled for lack of
+memory) and the **TP-Link Archer AX55 v1** (IPQ5018 with QCN6122, 512 MiB of
+RAM and two firmware banks).
 
-- the **Mercusys MR80X v2**: same SoC, switch and flash, but 256 MiB of RAM.
-  Its upstream support leaves Wi-Fi disabled for lack of memory;
-- the **TP-Link Archer AX55 v1**: IPQ5018 with QCN6122, 512 MiB of RAM and
-  two firmware banks.
+A single script, `openwrt/add_h80x.py`, applies all the project's additions
+to an OpenWrt tree, and running it twice gives the same result. It adds the
+device tree and the image recipe; the MAC, LED and calibration scripts and
+the `factory_data` mount; the U-Boot environment entry and the
+bank-switching upgrade case; a fix to the shared NAND upgrade helper; and two
+first-boot safety scripts. A full build took about 45 minutes on 8 cores.
 
-The first full build took about 45 minutes on 8 cores. A single
-script, `openwrt/add_h80x.py`, applies all the project's additions to an
-OpenWrt tree:
+### Device tree and partitions
 
-- the device tree and the image recipe;
-- the MAC, LED and calibration scripts and the `factory_data` mount;
-- the U-Boot environment entry and the bank-switching upgrade case;
-- a fix to the shared NAND upgrade helper;
-- two first-boot safety scripts.
+The device tree started from the MR80X v2 one and was adapted to the H80X's
+stock device tree: switch reset on GPIO 39, the button and LED GPIOs listed
+above, three Ethernet ports, and no UART pin setting. The CPU talks to the
+switch over SGMII at 1000 Mbit/s, set the same way on both ends, and the link
+was observed at 1 Gbit/s. The stock device tree forces SGMII at
+2500 Mbit/s; the speed actually used by the stock firmware was not measured
+(section 13).
 
-Running it twice gives the same result.
-
-### Device tree
-
-The device tree started from the MR80X v2 one. It was then adapted to the
-H80X's own stock device tree: switch reset on GPIO 39, the button and LED GPIOs
-listed above, three Ethernet ports, and no UART pin setting.
-
-The CPU talks to the switch over SGMII at 1000 Mbit/s, set the same way on
-both ends. The link was observed at 1 Gbit/s under OpenWrt. The
-stock device tree configures that link as SGMII with a forced speed of
-2500 Mbit/s. The speed actually used by the stock firmware was not measured.
-Section 13 covers the 2.5 Gbit/s variant.
-
-### Partitions
-
-The flash layout is fixed in the device tree. In the installable version,
-only three partitions can be written under OpenWrt's kernel: `0:APPSBLENV`
-(U-Boot environment), `rootfs` and `rootfs_1` (the two firmware banks). The
-other thirteen are read-only, including the whole boot chain, `0:ART` and
-`factory_data`. The test version used for early RAM boots kept all sixteen
-read-only. These flags do not protect against U-Boot commands or another
-kernel.
-
-The device tree appends `root=/dev/ubiblock0_1 coherent_pool=2M` to the
-kernel command line. U-Boot itself supplies `ubi.mtd=rootfs` or
-`ubi.mtd=rootfs_1`, depending on the bank.
+In the installable device tree, only three partitions can be written under
+OpenWrt's kernel: `0:APPSBLENV` (U-Boot environment), `rootfs` and
+`rootfs_1` (the two firmware banks). The other thirteen are read-only,
+including the whole boot chain, `0:ART` and `factory_data`. The device tree
+used for early RAM boots kept all sixteen read-only. These flags do not
+protect against U-Boot commands or another kernel. The device tree appends
+`root=/dev/ubiblock0_1 coherent_pool=2M` to the kernel command line; U-Boot
+supplies `ubi.mtd=rootfs` or `ubi.mtd=rootfs_1`, depending on the bank.
 
 ### MAC addresses, read without writing
 
 The stock firmware keeps the base MAC address in a 6-byte file,
-`default-mac`, in the UBIFS volume of `factory_data`. The kernel
-attaches that partition in read-only mode, because the device tree marks it
-read-only. An early boot script then mounts the volume read-only and reads the
-address. The project keeps the stock offsets:
+`default-mac`, in the UBIFS volume of `factory_data`. The kernel attaches
+that partition read-only, as marked in the device tree, and an early boot
+script mounts the volume read-only to read the address. The project keeps
+the stock offsets:
 
 | Interface | Address |
 |---|---|
@@ -450,51 +403,45 @@ address. The project keeps the stock offsets:
 | 2.4 GHz radio | base + 2 |
 | 5 GHz radio | base + 3 |
 
-The MR80X v2 uses base - 1 and base - 2 for its radios. Both conventions exist
-in TP-Link's stock scripts. Before this step, OpenWrt ran with
-U-Boot's placeholder address. One message is worth knowing: in
-read-only mode, UBIFS reports that the `factory_data` volume "needs recovery"
-and defers it. No repair was attempted.
-
-The port LEDs follow the link state of each port through OpenWrt's `netdev`
-trigger.
+The MR80X v2 uses base - 1 and base - 2 for its radios; both conventions
+exist in TP-Link's stock scripts. Without this step, OpenWrt runs with
+U-Boot's placeholder address. In read-only mode, UBIFS reports that the
+`factory_data` volume "needs recovery" and defers it. No repair was
+attempted. The port LEDs follow the link state of each port through
+OpenWrt's `netdev` trigger.
 
 ### Wi-Fi, board data files and `coherent_pool=2M`
 
-The device tree enables the Q6 co-processor with the stock start parameters.
-It also declares two radios: the internal 2.4 GHz radio and the QCN6122 for
-5 GHz. Both use memory mode 1 and a calibration variant string specific to
-the H80X. The memory addresses follow OpenWrt's standard layout for mode 1,
-not the stock ones.
+The device tree enables the Q6 co-processor with the stock start parameters
+and declares two radios: the internal 2.4 GHz radio and the QCN6122 for
+5 GHz. Both use memory mode 1, at OpenWrt's standard addresses for that mode
+rather than the stock ones, and a calibration variant string specific to the
+H80X.
 
-**The first attempt failed** with `DMA pool exhausted for pd-1`, then
-`Failed to load program segments: -12`. The fix was to add
-**`coherent_pool=2M`** to the kernel command line, which is the value the
-stock device tree adds. The OpenWrt device tree now adds it. **Without it,
-Wi-Fi does not start.**
+**Without `coherent_pool=2M`, Wi-Fi does not start.** The first attempt
+failed with `DMA pool exhausted for pd-1`, then `Failed to load program
+segments: -12`. The OpenWrt device tree now adds `coherent_pool=2M`, the
+value the stock device tree adds.
 
 Both radios report default identifiers over QMI (`chip_id 0`,
 `board_id 0xff`). This suggests that no board identity was programmed into
 their one-time-programmable area, but that area was not read in full. The
-driver therefore asks for the board data by this name:
+driver therefore asks for the board data by this name; for the QCN6122, a
+debug build confirmed an exact match, with no fallback to a generic entry:
 
 `bus=ahb,qmi-chip-id=0,qmi-board-id=255,variant=Mercusys-Halo-H80X-v1`
 
-For the QCN6122, a debug build confirmed an exact match, with no fallback to
-a generic entry.
-
-The board data files come from the stock firmware 1.1.0. The IPQ5018 file is
-`bdwlan_DE.b24`, a member of the archive `/lib/firmware/IPQ5018/fw_1.tar.gz`,
-which matches hardware version 1. The QCN6122 file is
-`/lib/firmware/qcn6122/bdwlan_DE.b60`, a plain file in the stock root
-filesystem. Both are byte-identical to the files in the public 1.1.0 firmware
-package. `openwrt/make_board2.py` packs each one, unchanged, into the
-`board-2.bin` container that `ath11k` expects.
-OpenWrt ships a newer Wi-Fi firmware (`WLAN.HK.2.7.0.1-01744`) than the one
-these files were made for (2.5). The combination worked in the recorded tests
-once `coherent_pool=2M` was added. This does not prove general compatibility.
- The per-unit calibration is a separate file, extracted at boot
-from `0:ART`. It does not depend on the board data files.
+The board data files are `bdwlan_DE.b24` (IPQ5018, from the archive for
+hardware version 1) and `bdwlan_DE.b60` (QCN6122), taken from stock firmware
+1.1.0 and byte-identical to the files in the public 1.1.0 package.
+[WIFI-BDF.md](WIFI-BDF.md) gives their paths and the private build steps.
+`openwrt/make_board2.py` packs each one, unchanged, into the `board-2.bin`
+container that `ath11k` expects. OpenWrt ships a newer Wi-Fi firmware
+(`WLAN.HK.2.7.0.1-01744`) than the one these files were made for (2.5). The
+combination worked in the recorded tests once `coherent_pool=2M` was added.
+This does not prove general compatibility. The per-unit calibration is a
+separate file, extracted at boot from `0:ART`; it does not depend on the
+board data files.
 
 **Licence.** No text consulted grants the right to republish these two
 files. They are kept out of version control and will not be in the public
@@ -509,17 +456,12 @@ processor Q6`) until a hardware reset.
 
 ### Image recipe and upgrade path
 
-The image recipe follows the MR80X v2:
-
-- a FIT kernel image;
-- the kernel stored inside UBI;
-- no `factory.bin`, because the stock web page cannot install it (see
-  section 7);
-- a maximum image size equal to one bank (43008 KiB).
-
- The resulting `sysupgrade.bin` is a tar archive with a control
-file, the kernel and the root filesystem. The U-Boot environment
-settings for `fw_printenv`/`fw_setenv` match the stock configuration.
+The image recipe follows the MR80X v2: a FIT kernel image stored inside UBI,
+no `factory.bin` (the stock web page cannot install it, see section 7), and a
+maximum image size of one bank (43008 KiB). The resulting `sysupgrade.bin`
+is a tar archive with a control file, the kernel and the root filesystem.
+The U-Boot environment settings for `fw_printenv`/`fw_setenv` match the stock
+configuration.
 
 The upgrade case for the H80X, in `platform.sh`, follows this ordinary path:
 
@@ -532,24 +474,18 @@ The upgrade case for the H80X, in `platform.sh`, follows this ordinary path:
 3. **Only if the write succeeded**, it sets `tp_boot_idx` to `1`, or clears
    it when the target is `rootfs`.
 
-OpenWrt's option to write the current bank instead is also kept in the
-script. With that option, the current bank is written and the bank flag is
-left unchanged.
+OpenWrt's option to write the current bank instead is also kept. With that
+option, the current bank is written and the bank flag is left unchanged.
 
 Step 3 needed a fix in shared OpenWrt code. Two independent reviews found
 that the common NAND helper (`nand_upgrade_tar` in `nand.sh`) ended with an
 unconditional `return 0`. A failed volume write was therefore reported as a
 success, and the bank flag would have been switched anyway. A simulation
-reproduced it. The project patches the helper:
-
-- it collects the status of each write and uses `pipefail`;
-- it checks that the target volumes exist;
-- it returns the real status;
-- the failure path now really stops.
-
-The integration script applies this patch. Its limit: it propagates errors
-but does not read back what was written. A power cut during the write or
-during `fw_setenv` stays outside its control.
+reproduced it. The integration script patches the helper: it collects the
+status of each write and uses `pipefail`, checks that the target volumes
+exist, returns the real status, and really stops on failure. It does not read
+back what was written, and a power cut during the write or during
+`fw_setenv` stays outside its control.
 
 ### First-boot safety scripts
 
@@ -565,8 +501,8 @@ Two scripts run once, at first boot, before the network starts:
 
 No Wi-Fi key exists in the sources or in the images.
 
-After installation, the web interface turned out to answer on HTTP only.
-The TLS library was present, but no certificate generator was included, so
+**HTTPS.** On the installed image, the web interface answered on HTTP only:
+the TLS library was present, but no certificate generator was included, so
 `uhttpd` started without HTTPS. Installing the missing package
 (`px5g-mbedtls`) fixed it: TLS 1.3 and HTTP 200 were observed. The package
 was added to the recipe. **No full image has been rebuilt since**, and nobody
@@ -574,10 +510,10 @@ has checked whether the fix survives a reboot.
 
 ## 9. Testing in RAM
 
-The initramfs images described here were booted from RAM over TFTP. The
-sysupgrade images were inspected off the device, and then the WPA2 image was
-installed (section 10). No deliberate write command was run during these RAM
-checks. The sequence at the U-Boot prompt:
+The initramfs images were booted from RAM over TFTP, and no deliberate write
+command was run during these checks. The sysupgrade images were inspected
+off the device before the installation (section 10). The sequence at the
+U-Boot prompt:
 
 ```text
 setenv autoload no
@@ -589,66 +525,52 @@ setenv bootargs console=ttyMSM0,115200n8
 bootm 0x46000000#config@mp03.3
 ```
 
-Set `autoload no` before `dhcp`. Once, quoting problems between two shells
-mangled the commands, and U-Boot's `dhcp` tried on its own to download a
-default file name over TFTP. The file did not exist and nothing booted, but
-the risk is clear. For the documented TFTP boots, the CRC
-computed in U-Boot was compared with the local one.
+Set `autoload no` before `dhcp`. Without it, U-Boot's `dhcp` tries on its own
+to download a default file name over TFTP. This happened once, when quoting
+problems between two shells mangled the commands; the file did not exist and
+nothing booted. For the documented TFTP boots, the CRC computed in U-Boot was
+compared with the local one.
 
-The milestones:
+### What the RAM tests showed
 
-- **12 November: first OpenWrt boot.** OpenWrt `r38212-30a23ae451`, Linux
-  6.18.60, board name `mercusys,h80x-v1`, about 432 MB of RAM available,
-  working serial console and SSH. The switch driver found the
-  RTL8367S and created `lan1` to `lan3`, with an SGMII 1 Gbit/s link to the
-  CPU. In U-Boot, `mii info` sees nothing on that bus. This is expected: the
-  switch does not present itself as a PHY. The NAND and its 16
-  partitions were detected. Nothing was attached or written. The
-  LEDs were checked by eye, one by one. Each press of the reset
-  button was seen on GPIO 33. During this test the reset handler was
-  disabled, so that a press would not reboot the device, and it was restored
-  afterwards.
-- **12 November: Wi-Fi.** Both radios came up once `coherent_pool=2M` was in
-  place. A phone associated to test access points protected
-  with WPA2, country DE. The link readings with the phone as
-  client showed 1200.9 Mbit/s on 5 GHz (HE80, MCS 11, two streams, -46 dBm)
-  and 155–172 Mbit/s on 2.4 GHz (HE20, MCS 6–7, two streams). **These are PHY
-  link rates, not throughput. No throughput test was run.**
-- **12 November: robustness.** Ten cycles of `wifi down` and `wifi up`
-  brought both radios back every time, with no `ath11k` error or recovery and
-  no net memory loss. 160 MHz on channel 36 worked after the 60-second radar
-  check. 40 MHz on 2.4 GHz fell back to 20 MHz because of nearby networks,
-  which is normal behaviour. The CPU stayed around 50 °C. About 240 MB of RAM
-  remained available with Wi-Fi loaded, and the LuCI web interface
-  answered.
-- **12 November: installable device tree.** The kernel's partition flags
-  showed exactly three writable partitions (`0:APPSBLENV`, `rootfs`,
-  `rootfs_1`). Both radios came up, the MAC addresses were correct,
-  `factory_data` was mounted read-only, and `ath11k` did not crash.
+RAM boots of one unit, 12–13 November 2026:
 
-- **13 November: confirmation build.** The rebuild confirmed and fixed two
-  integration gaps. A wrong path in the integration script meant that the
-  U-Boot environment configuration was never installed: the script printed
-  "file not found, step skipped" and carried on. And the H80X case was never
-  inserted into `platform.sh`, so an upgrade would have fallen back to the
-  generic routine, without bank switching. Both were fixed.
-- **13 November: "final" image, rated red.** Everything worked, but the
-  default Wi-Fi configuration said `encryption=none`, with the interfaces
-  disabled. That is OpenWrt's normal default, not an open access point. It
-  still broke the project rule "always WPA2".
-- **13 November: image with the NAND fix.** The running system contained
-  exactly the patched `nand.sh` and `platform.sh`, checked by SHA-256 against
-  the build.
-- **13 November: WPA2 image.** On first boot, with no manual change: both
-  interfaces in `psk2` and disabled, keys present (only their length was
-  checked), country DE, no interface created, both radios present. The LAN
-  protection was active, with no DHCP or DHCPv6 server socket, and the
-  partition flags were as expected. An independent offline audit
-  checked both images against the hashes recorded in the local build report
-  and found the two first-boot scripts byte-identical to the sources. It
-  accepted the images with reservations: persistence after installation was
-  not proven yet, and some error paths are handled less broadly than the
-  report claimed.
+- **System**: OpenWrt `r38212-30a23ae451`, Linux 6.18.60, board name
+  `mercusys,h80x-v1`. About 432 MB of RAM available, about 240 MB with Wi-Fi
+  loaded. Serial console, SSH and the LuCI web interface working.
+- **Switch**: the driver found the RTL8367S and created `lan1` to `lan3`,
+  with an SGMII 1 Gbit/s link to the CPU. In U-Boot, `mii info` sees nothing
+  on that bus. This is expected: the switch does not present itself as a PHY.
+- **Flash**: the NAND and its 16 partitions detected; on the first boot,
+  nothing attached or written. With the installable device tree, exactly
+  three writable partitions (`0:APPSBLENV`, `rootfs`, `rootfs_1`),
+  `factory_data` mounted read-only, both radios up and no `ath11k` crash.
+- **LEDs and button**: LEDs checked by eye, one by one. Each reset press seen
+  on GPIO 33; the reset handler was disabled during this test, so that a
+  press would not reboot the device, and restored afterwards.
+- **MAC addresses**: correct (base, +2, +3).
+- **Wi-Fi**: both radios up once `coherent_pool=2M` was in place. A phone
+  associated to test access points protected with WPA2, country DE. Link
+  readings with the phone as client: 1200.9 Mbit/s on 5 GHz (HE80, MCS 11,
+  two streams, -46 dBm) and 155–172 Mbit/s on 2.4 GHz (HE20, MCS 6–7, two
+  streams). **These are PHY link rates, not throughput. No throughput test
+  was run.**
+- **Robustness**: ten cycles of `wifi down` and `wifi up` brought both radios
+  back every time, with no `ath11k` error or recovery and no net memory loss.
+  160 MHz on channel 36 worked after the 60-second radar check. 40 MHz on
+  2.4 GHz fell back to 20 MHz because of nearby networks, which is normal.
+  The CPU stayed around 50 °C.
+- **First boot of the WPA2 image**, with no manual change: both radios
+  present, the expected partition flags, and the same Wi-Fi and LAN defaults
+  as checked after installation (section 10).
+- **RAM image with the NAND fix**: the running `nand.sh` and `platform.sh`
+  matched the patched build by SHA-256.
+
+An independent offline audit checked the installation images against the
+hashes recorded in the local build report and found the two first-boot
+scripts byte-identical to the sources. It accepted the images with
+reservations: persistence after installation was not proven at that point,
+and some error paths are handled less broadly than the report claimed.
 
 ![Test bench with the Halo board, USB-serial adapter, Ethernet cable and power lead](photos/PHOTO-11.jpg)
 
@@ -670,10 +592,10 @@ following rules:
   this board. A kernel that starts and then crashes is not detected: the same
   bank is tried again at the next power-on.
 
-### The installation (13 November 2026)
+### The installation
 
-The journal records the owner's explicit approval for this step.
- The steps:
+The installation was done on 13 November 2026. The journal records the
+owner's explicit approval for this step. The steps:
 
 1. Boot the WPA2 initramfs from RAM, as in section 9.
 2. Copy `sysupgrade.bin` onto it and compare its SHA-256 with the local file.
@@ -685,16 +607,13 @@ The journal records the owner's explicit approval for this step.
    first boot created the persistent overlay, and `factory_data` stayed
    read-only.
 
-After a second reboot, the overlay was found again rather than recreated. The
-following was checked:
-
-- `tp_boot_idx=1` and a SquashFS root;
-- the U-Boot environment tools in place, and the NAND fix present;
-- on the LAN: a DHCP client, no DHCP, DHCPv6 or router-advertisement service,
-  and no socket on UDP 67 or 547. `dnsmasq` still answers DNS on port 53;
-- two Wi-Fi interfaces in `psk2`, disabled, country DE, with 64-character keys
-  (length only), no interface created;
-- the first-boot scripts removed after running.
+After a second reboot, the overlay was found again rather than recreated.
+Checked: `tp_boot_idx=1` and a SquashFS root; the U-Boot environment tools in
+place and the NAND fix present; on the LAN, a DHCP client, no DHCP, DHCPv6 or
+router-advertisement service and no socket on UDP 67 or 547 (`dnsmasq` still
+answers DNS on port 53); two Wi-Fi interfaces in `psk2`, disabled, country
+DE, with 64-character keys (length only), no interface created; the
+first-boot scripts removed after running.
 
 The journal states that the write targeted `rootfs_1`, not the stock bank
 `rootfs`. The integrity of `rootfs` was not read back after the installation.
@@ -756,25 +675,20 @@ What is **not** guaranteed:
 - **Board data files.** Their redistribution rights are not established, so
   they are not published. Without them, Wi-Fi does not work, and an image
   rebuilt from this repository alone has no Wi-Fi.
-- **5 GHz channels 100 and above.** They are disabled. Channels 36–64 work,
-  with 52–64 subject to radar detection. A debug build showed that, with the
-  board data file in use, the QCN6122 firmware itself announces only four
-  regulatory rules at each start: 2.4 GHz, 5170–5250 MHz, 5250–5330 MHz, and
-  a 6 GHz range that the radio cannot use. Setting other country codes did
-  not add the upper band. At boot, the stock driver also reports only 8
-  channels on 5 GHz. So the stock firmware probably does not use the upper
-  band either, but that observation is partial. The other stock
-  board-file variants were only compared offline: they differ in a region
-  code and in power tables, and none of them was booted. The device tree's
-  frequency limit and the driver options were examined in the files and offer
-  no override. The effect of the other variants on the hardware remains
-  untested.
+- **5 GHz channels 100 and above** are disabled. Channels 36–64 work, with
+  52–64 subject to radar detection. With the board data file in use, a debug
+  build showed the QCN6122 firmware itself announcing only four regulatory
+  rules: 2.4 GHz, 5170–5250 MHz, 5250–5330 MHz, and a 6 GHz range the radio
+  cannot use. Other country codes did not add the upper band. The stock
+  driver also reports only 8 channels on 5 GHz at boot, so the stock firmware
+  probably does not use the upper band either; that observation is partial.
+  The other stock board-file variants differ in a region code and power
+  tables; they were only compared offline, none was booted, and their effect
+  on the hardware remains untested. The device tree's frequency limit and the
+  driver options, examined in the files, offer no override.
 - **CPU–switch link at 1 Gbit/s.** A 2.5 Gbit/s variant is drafted but not
-  applied. It needs both ends set to `2500base-x` and a driver fix that was
-  still under review in OpenWrt at the time. It has not been tested on the
-  H80X.
+  applied or tested on the H80X (section 13).
 - **Ports.** The three ports are all LAN. No WAN port is defined.
-
 - **Going back to stock**: see section 11.
 - **Upstream**: nothing has been submitted. Open OpenWrt pull requests touch
   the same code: a common function for `tp_boot_idx` on TP-Link and Mercusys
@@ -786,121 +700,90 @@ The device tree change is small: set `2500base-x` and 2500 Mbit/s on both the
 SoC side and the switch's CPU port. On a related board, a public report
 describes changing only one side: most boots then failed to transmit. Even
 with both sides changed, an intermittent fault (link up, no traffic) needs a
-driver fix that had not been merged. The draft is kept apart from the tested
-configuration.
+driver fix that was still under review in OpenWrt and had not been merged.
+The draft is kept apart from the tested configuration.
 
 ## 14. Incidents, dead ends and lessons
 
-**The DHCP incident (12 November).** The first OpenWrt test image came up
-with OpenWrt's default LAN settings: a static address and an active DHCP
-server. The unit was plugged into the home network, and that server **gave a
-lease to a household device** before it was stopped. The fix has two parts:
+**The DHCP incident.** The first OpenWrt test image came up with OpenWrt's
+default LAN settings: a static address and an active DHCP server. The unit
+was plugged into the home network, and that server **gave a lease to a
+household device** before it was stopped. The fix has two parts: a
+first-boot script that turns the LAN into a DHCP client and disables the
+DHCP server, DHCPv6 and router advertisements (installed by the integration
+script, checked in RAM and after installation); and a standing project rule:
+never plug a test image into a live network without that protection, and
+check `dhcp.lan.ignore=1`. Lesson: OpenWrt's defaults assume it is the
+router. On someone else's network, change the defaults before the first
+boot.
 
-- a first-boot script that turns the LAN into a DHCP client and disables the
-  DHCP server, DHCPv6 and router advertisements;
-- a standing project rule: never plug a test image into a live network
-  without that protection, and check `dhcp.lan.ignore=1`.
+**Unloading the Wi-Fi driver.** Reloading `ath11k` on the running system
+left the Q6 co-processor unable to restart, and Wi-Fi was gone. After a
+reboot, the unit ran the stock firmware from flash, because a RAM image does
+not survive a reboot. That console gave no shell, and there was no remote
+power control. To return to U-Boot without a flash write, a serial BREAK
+followed by SysRq `c` (crash) was used: the watchdog rebooted the unit, and
+U-Boot could be interrupted again. The stock SysRq mask allows only crash,
+power-off and minidump, and power-off could not have been undone remotely.
+Lesson: put debug options in the image at boot, not in a running system. A
+later check confirmed that the debug module is absent from the installation
+images.
 
-Since 13 November the script is in the repository and installed by the
-integration script. It was checked in RAM and again after installation.
- Lesson: OpenWrt's defaults assume it is the router. On
-someone else's network, change the defaults before the first boot.
+**Other lessons.**
 
-**Unloading the Wi-Fi driver (12 November).** To read a debug name, an agent
-reloaded `ath11k` while the system ran. The Q6 co-processor would not
-restart, and Wi-Fi was gone. After an unplanned reboot, the unit was running
-the stock firmware from flash: a RAM image does not survive a reboot. That
-console gave no shell, and there was no remote power control. To return to
-U-Boot, a serial BREAK followed by SysRq `c` (crash) was used: the watchdog
-rebooted the unit, with no flash write, and U-Boot could be interrupted again.
-The stock SysRq mask allows only crash, power-off and minidump, and power-off
-could not have been undone remotely.
- Lesson: put debug options in the image at boot, not in a
-running system.
+- In U-Boot, set `autoload no` before `dhcp` (section 9).
+- The integration script can skip a step without failing. A wrong path meant
+  that the U-Boot environment configuration was never installed: the script
+  printed "file not found, step skipped" and carried on. The H80X case was
+  also never inserted into `platform.sh`, so an upgrade would have fallen
+  back to the generic routine, without bank switching. A rebuild found both
+  gaps, and both were fixed. Read the script's output (section 16).
+- OpenWrt's default Wi-Fi configuration is `encryption=none`, with the
+  interfaces disabled. That is not an open access point, but it breaks the
+  project rule "always WPA2". The `99-h80x-wifi-safe` script (section 8) sets
+  WPA2 instead.
+- Reviews of the code that writes to flash found the false success in the
+  NAND helper (section 8), and the missing HTTPS generator showed up only
+  after installation. Only the result of a real NAND write could not be shown
+  by a RAM test. Test the artefact you will install, and review the code
+  paths that write.
+- Each image was recorded with its size and checksum, so each test can be
+  traced to an exact file.
 
-**Leftover debug settings.** The same investigation left debug options in the
-shared build tree, and the journal flagged them to be cleaned before any
-installation image. The tree was found clean at the next rebuild, and a later
-check confirmed that the debug module was absent from the images.
+**Dead ends.** The stock web page, U-Boot's recovery page and older or
+sister-model firmware as installation routes (section 7); unlocking 5 GHz
+channels 100+ (section 12); a `factory.bin` and the `UbiFit` image layout,
+both dropped from the recipe.
 
-**Gaps found by rebuilding and reviewing.** The rebuild confirmed and fixed
-the integration-script gaps. Independent reviews of the code that writes to
-flash found the false success in the NAND helper. The missing HTTPS generator
-showed up after installation. Only the result of a real NAND write could not
-be shown by a RAM test. Lesson: test the artefact you
-will install, and review the code paths that write.
-
-**Dead ends.**
-
-- Installing through the stock web page with an MR80X-style image (section 7;
-  ruled out by static analysis, not attempted).
-- Using an older or a sister-model stock firmware as a stepping stone.
-
-- Installing through U-Boot's recovery page, which needs a signature.
-
-- Unlocking 5 GHz channels 100+ (section 12).
-- A `factory.bin` and the `UbiFit` image layout, both dropped from the
-  recipe.
-
-**Corrections along the way.** Later analyses corrected several early
-conclusions. Some historical project documents still carry the outdated
-wording:
-
-- a memory address was first attributed to the QCN6122; it belongs to the
-  disabled QCN9000 slot;
-- the 5 GHz limit was first blamed on the DE board file; a debug build then
-  showed that the radio firmware itself announces the restricted rules
-  (section 12);
-- the hypothesis that the MR80X install method would work was disproved;
-- "guaranteed return to stock" overstated what has been tested.
-
- This text uses the corrected versions.
-
-Each rebuild produced images under a new name (`-final`, `-fix`, `-wpa2`),
-recorded with their size and checksum. Each test can therefore be traced to an
-exact file.
+**Corrections.** This text uses corrected versions of early conclusions;
+some historical project documents still carry the outdated wording. A memory
+address first attributed to the QCN6122 belongs to the disabled QCN9000
+slot. The 5 GHz limit, first blamed on the DE board file, comes from the
+rules the radio firmware announces. The MR80X install method does not apply.
+"Guaranteed return to stock" overstated what has been tested.
 
 ## 15. Who did what: AI agents and the human
 
 This project relied heavily on AI agents. According to the project notes, the
-owner set this organisation:
+owner set this organisation: Claude orchestrates and verifies, GPT-based and
+Cursor agents carry out delegated tasks, and a separate model runs
+counter-checks. A check by another model does not replace human review.
 
-- Claude orchestrates and verifies;
-- GPT-based agents and Cursor agents carry out delegated tasks;
-- a separate model runs counter-checks.
+Agents did the offline analysis on copies (device tree, MAC addresses, Wi-Fi,
+installation, LEDs, disassembly of the stock updater and U-Boot, older
+firmware, licence research), each task with a written brief and a report and
+without touching the device. The orchestrating agent re-checked key findings
+itself, such as the updater disassembly. Agents drove the serial console and
+the RAM tests through the Linux machine attached to the UART. Independent
+reviews covered the pre-install state, the flash-write path and the WPA2
+images. Agents wrote and checked this text.
 
-A check by another model does not replace human review.
-
-What the agents did:
-
-- **Offline analysis on copies**: device tree, MAC addresses, Wi-Fi,
-  installation, LEDs, disassembly of the stock updater and of U-Boot, older
-  firmware, licence research. Each task had a written brief and a report, and
-  neither touched the device.
-- **Re-verification**: the orchestrating agent re-checked key findings itself,
-  for example the updater disassembly and the identity of the stock
-  `nvrammanager`.
-- **Hardware sessions**: agents drove the serial console and the RAM tests
-  through the Linux machine attached to the UART.
-- **Independent reviews**: a pre-install counter-check, a targeted review of
-  the flash-write path, and an audit of the WPA2 images.
-- **This text**, written and checked by agents. The owner will review it
-  before publication.
-
-What the human did:
-
-- **Physical access** to the unit. The owner reports opening both cases
-  with plastic tools. The records do not identify who performed every other
-  physical step (see below).
-- **Explicit approval** before any flash write, as the project rules
-  require.
-- **Decisions**: publication, licence, scope.
-- **Owner's notes** from 11–12 November report the first serial dialogue, the
-  backup and the stock RAM boot.
-
-The visual LED check and the Wi-Fi client tests with a phone were done on
-the hardware. The owner has since described opening both cases. Who wired
-the UART and handled the phone is not recorded in the project files.
+The owner had physical access to the unit, gave explicit approval before any
+flash write, and decided on publication, licence and scope. The owner reports
+opening both cases with plastic tools; the owner's notes report the first
+serial dialogue, the backup and the stock RAM boot. Who wired the UART and
+handled the phone for the Wi-Fi client tests is not recorded in the project
+files.
 
 ## 16. How to reproduce
 
@@ -922,7 +805,6 @@ sections 4, 6 and 11 first.
    Without board data files, the radios will not start (section 8).
 2. **Serial console.** Open the case, identify and **measure** the UART pads,
    connect at the measured voltage, 115200 8N1. Stop U-Boot with `tpl`.
-
 3. **Back up the NAND first**, as in section 6, and keep the backup private:
    it contains your unit's private key.
 4. **If the unit is on a network you share**, make sure your image includes
