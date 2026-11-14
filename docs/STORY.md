@@ -78,9 +78,11 @@ The owner reports the same procedure on both units:
 3. Pry along the visible groove in the case. Opening requires force.
    The owner used plastic tools to avoid breaking the case.
 
-A Russian-language [review on DNS Club](https://club.dns-shop.ru/review/t-280-marshrutizatoryi/85194-obzor-domashnei-wi-fi-mesh-sistemyi-mercusys-halo-h80x-kompaktno/)
-shows further photographs of the device and its disassembly. Those photographs
-belong to their authors and are not part of this repository.
+A Russian-language [review on DNS Club](https://club.dns-shop.ru/review/t-280-marshrutizatoryi/85194-obzor-domashnei-wi-fi-mesh-sistemyi-mercusys-halo-h80x-kompaktno/),
+posted by the user STNVIDNOYE with photographs watermarked
+`sergeytroshin.ru`, shows further views of the device, including the board
+with its shields removed. Those photographs belong to their author and are
+not part of this repository.
 
 The board can stay in the case: the UART pads are accessible once the case
 is open. The owner thinks a small soldering iron could reach the pads without
@@ -113,10 +115,19 @@ The table lists each part and how the project identified it.
 | 5 GHz Wi-Fi | Qualcomm QCN6122, started by the SoC's Q6 co-processor (not a PCIe device seen by Linux) | Stock device tree, then `ath11k` |
 
 Linux detects the flash chip as an ESMT SPI-NAND, in two separate boot logs.
-Early project notes attributed it to GigaDevice. The marking read on the
-chip shows **ESMT F50D1G41LB**, consistent with Linux detection.
+The marking read on the chip of the first unit shows **ESMT F50D1G41LB**,
+consistent with Linux detection. Early project notes attributed the flash to
+GigaDevice. That attribution matches the DNS Club review cited in section 2:
+its author reports a 128 MB GigaDevice NAND (written `5F1GQ5REY1G`) and
+Zentel `A3T4GF40BBF-HP` RAM on the unit they opened. The marking is not
+legible at the resolution of the saved copy of that review, so this project
+has not checked it. **The flash chip may therefore differ between production
+batches. This port was tested only with the ESMT part**; a unit with another
+flash chip is untested, and the bootloader's flash identification should be
+checked before any write.
 The exact switch variant (RTL8367S rather than another member of the family)
-is inferred from the driver and the stock files, not read from the chip.
+is inferred from the driver and the stock files, not read from the chip. The
+same review names the switch as RTL8367S.
 The IPQ5018, QCN6122 and RTL8367S are under shields with thermal pads.
 There are no photographs of their chip markings.
 
@@ -924,8 +935,9 @@ NAND backup; this will be checked on the final export before publication.
 - The OpenWrt project and the authors of the Mercusys MR80X v2 and TP-Link
   Archer AX55 v1 support, which this port builds on.
 - The contributors to the OpenWrt forum thread on the MR80X v2.
-- The author of the [DNS Club review](https://club.dns-shop.ru/review/t-280-marshrutizatoryi/85194-obzor-domashnei-wi-fi-mesh-sistemyi-mercusys-halo-h80x-kompaktno/) of the Halo H80X,
-  for the additional device photographs.
+- STNVIDNOYE, author of the [DNS Club review](https://club.dns-shop.ru/review/t-280-marshrutizatoryi/85194-obzor-domashnei-wi-fi-mesh-sistemyi-mercusys-halo-h80x-kompaktno/)
+  of the Halo H80X (photographs watermarked `sergeytroshin.ru`), for the
+  additional device photographs and component list.
 - `ath11k-bdencoder` from qca-swiss-army-knife, used to check the board data
   container format.
 - Mercusys, for publishing the GPL source of the H80X firmware.

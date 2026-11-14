@@ -11,7 +11,7 @@ Other regions and hardware revisions have not been validated.
 |---|---|
 | Platform | Qualcomm IPQ5018, two cores, AP-MP03.3, machid `0x8040002` |
 | RAM | 512 MiB |
-| NAND | 128 MiB SPI NAND; the chip marking confirms ESMT F50D1G41LB, consistent with Linux detection; 2048-byte pages; 64-byte OOB; ECC 4 bits/512 bytes |
+| NAND | 128 MiB SPI NAND; the chip marking confirms ESMT F50D1G41LB, consistent with Linux detection; 2048-byte pages; 64-byte OOB; ECC 4 bits/512 bytes. A third-party review reports a GigaDevice NAND on another unit (see below); only the ESMT part was tested |
 | Switch | Realtek RTL8367S, MDIO address 29, driver `rtl8365mb` |
 | Ethernet | Three RJ45 ports; DSA `lan1`/`lan2`/`lan3`; switch ports 0/1/2; CPU port 6 |
 | CPU link | SGMII 1 Gbit/s in the tested port; 2.5 Gbit/s untested |
@@ -31,7 +31,13 @@ The owner thinks a small soldering iron could reach them without removing
 the board; this has not been verified.
 
 The IPQ5018, QCN6122 and RTL8367S are under shields with thermal pads. Their
-chip markings are not photographed. The NAND marking is visible in the
+chip markings are not photographed here. A Russian-language
+[DNS Club review](https://club.dns-shop.ru/review/t-280-marshrutizatoryi/85194-obzor-domashnei-wi-fi-mesh-sistemyi-mercusys-halo-h80x-kompaktno/) shows a board with the
+shields removed; its author reports a GigaDevice NAND (written `5F1GQ5REY1G`)
+and Zentel `A3T4GF40BBF-HP` RAM on that unit. This project has not checked
+those markings. The flash chip may vary between batches; check the
+bootloader's flash identification before any write on a unit with a
+different chip. The NAND marking is visible in the
 [close-up](photos/PHOTO-07.jpg). Reset switch `SW1` is accessible through the
 small hole on the rear panel, between the power connector and Ethernet ports.
 See the [disassembly and board photographs](STORY.md#2-opening-the-case-and-the-board).
