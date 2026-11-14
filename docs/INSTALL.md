@@ -15,10 +15,11 @@ voltage and complete stock restoration remain unverified. No recovery method is 
    installation. Never upload device dumps or factory data. Backup acquisition
    and restore validation are outside this public procedure.
 2. Establish safe UART wiring first. The photographed FTDI FT232RNL adapter
-   has its voltage jumper set to `1V8`. The pad voltage has not been measured;
-   3.3 V was not validated. Do not connect adapter VCC. Use 115200 8N1, common
-   ground and crossed TX/RX only after checking the pad identities and measuring
-   the voltage on your unit. See the photographs in [HARDWARE.md](HARDWARE.md#uart-photographs-and-voltage-limits).
+   has its voltage jumper set to `1V8`. On the first unit, `TX` measured about
+   1.8 V and the `VCC` pad 3.3 V; 3.3 V logic was not validated. Do not connect
+   the `VCC` pad or adapter VCC. Use 115200 8N1, common ground and crossed TX/RX
+   only after checking the pad identities and measuring the voltage on your
+   unit. See the photographs in [HARDWARE.md](HARDWARE.md#uart-photographs-and-voltage-limits).
 3. Build and inspect both images as described in [BUILD.md](BUILD.md). Keep the
    bootloader and sensitive partitions protected. Use an isolated test network.
 4. Configure a TFTP server for the initramfs image. The observed loader requires

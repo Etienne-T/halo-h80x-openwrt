@@ -31,11 +31,11 @@ was reported to break Q6 operation; use a controlled reboot instead.
 ## Before using the port
 
 The photographed USB-serial adapter uses an FTDI FT232RNL chip. Its voltage
-jumper is set to `1V8`. The UART pad voltage has **not been measured**;
-**3.3 V operation has not been validated.** The board labels and photographs
-of both units are documented in [Hardware](docs/HARDWARE.md) and the
-[project story](docs/STORY.md#4-the-serial-console). The jumper setting does
-not establish the pad voltage.
+jumper is set to `1V8`. On the first unit, a multimeter read about 1.8 V on
+the `TX` pad and 3.3 V on the `VCC` pad, which is a supply and must not be
+connected. **3.3 V logic has not been validated.** The board labels and
+photographs of both units are documented in [Hardware](docs/HARDWARE.md) and
+the [project story](docs/STORY.md#4-the-serial-console).
 
 The build defaults use a DHCP client on LAN, disable DHCP/RA servers, and leave
 Wi-Fi disabled with WPA2 keys generated locally. Verify these settings in your

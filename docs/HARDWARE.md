@@ -46,11 +46,14 @@ These labels document the physical pad order; they do not measure voltage.
 
 The photographed USB-serial adapter has an FTDI FT232RNL chip and a voltage
 jumper set to `1V8`; see the [adapter detail](photos/PHOTO-10.jpg) and
-[bench view](photos/PHOTO-11.jpg). The UART pad voltage has **not been measured**.
-No separate level adaptation is documented. **3.3 V operation has not been
-validated.** Neither the jumper setting nor the NAND voltage establishes the
-UART pad voltage. Use the device's own power supply; do not connect an adapter
-power output to the board.
+[bench view](photos/PHOTO-11.jpg). On the first unit, with the board powered,
+the owner measured with a multimeter about **1.8 V** between `GND` and `TX`
+(slight variation) and **3.3 V** between `GND` and `VCC`. The second unit was
+not measured. `VCC` is a supply pad, not the logic level: do not connect it.
+No separate level adaptation is used. **3.3 V logic has not been validated.**
+Use the device's own power supply; do not connect an adapter power output to
+the board. Wiring: `GND` to `GND`, board `TX` to adapter `RXD`, board `RX` to
+adapter `TXD`.
 
 ## MAC relationships
 

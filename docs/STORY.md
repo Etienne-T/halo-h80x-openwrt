@@ -14,11 +14,12 @@
 > an OpenWrt-supported device, nothing described here has been submitted to the
 > OpenWrt project, and the OpenWrt tests described here used **a single unit**.
 
-> **Warning: serial voltage.** The photographed FTDI FT232RNL adapter has
-> its voltage jumper set to `1V8`. The UART pad voltage has **not been measured**.
-> No separate level adaptation is documented. **3.3 V has not been validated.**
-> The jumper setting does not establish the pad voltage. Measure the pads
-> on your own unit before connecting anything.
+> **Warning: serial voltage.** On the first unit, a multimeter read about
+> **1.8 V** between `GND` and `TX` and **3.3 V** between `GND` and `VCC`.
+> `VCC` is a supply pad, not the logic level: never connect it. The
+> photographed FTDI FT232RNL adapter has its voltage jumper set to `1V8`.
+> **3.3 V logic has not been validated.** Measure the pads on your own unit
+> before connecting anything.
 
 ## In short
 
@@ -76,6 +77,10 @@ The owner reports the same procedure on both units:
 2. Remove the two screws.
 3. Pry along the visible groove in the case. Opening requires force.
    The owner used plastic tools to avoid breaking the case.
+
+A Russian-language [review on DNS Club](https://club.dns-shop.ru/review/t-280-marshrutizatoryi/85194-obzor-domashnei-wi-fi-mesh-sistemyi-mercusys-halo-h80x-kompaktno/)
+shows further photographs of the device and its disassembly. Those photographs
+belong to their authors and are not part of this repository.
 
 The board can stay in the case: the UART pads are accessible once the case
 is open. The owner thinks a small soldering iron could reach the pads without
@@ -137,16 +142,22 @@ The serial console was reached with a USB-serial board using an FTDI FT232RNL
 chip, attached to a Linux machine, at **115200 baud, 8N1**. Both directions work. A small script
 (`tools/tx_test.py`) was used to check the transmit wire on its own.
 
-**Logic level.** The adapter's voltage jumper is set to `1V8` in the photo.
-The UART pad voltage has **not been measured**. No separate level adaptation
-is documented, and **3.3 V has not been validated**. The jumper setting is
-not a measurement of the board's logic level.
+**Logic level.** On the first unit, with the board powered, the owner
+measured with a multimeter about **1.8 V** between `GND` and `TX`, with a
+slight variation, and **3.3 V** between `GND` and `VCC`. A multimeter
+averages the signal while the board transmits, so the variation is expected;
+when the reading was taken relative to serial activity was not recorded. The
+second unit was not measured. The `TX` reading matches the adapter's `1V8`
+jumper setting seen in the photo. `VCC` is a supply pad, not the logic level.
+No separate level adaptation is used, and **3.3 V logic has not been
+validated**.
 
 **Pinout.** Both boards have four pads labelled `GND`, `VCC`, `RX`, `TX`.
 With the labels upright in the close-ups below, that is their left-to-right
 order. The second view shows the pads with the board still in the case.
-Do not connect adapter VCC to the board. Check the labels and measure the
-pad voltage on your own unit before wiring it. The bench photograph documents
+Do not connect the `VCC` pad or adapter VCC. Wire `GND` to `GND`, board
+`TX` to adapter `RXD` and board `RX` to adapter `TXD`. Check the labels and
+measure the pad voltage on your own unit before wiring it. The bench photograph documents
 the equipment used; it does not verify each wire or its electrical level.
 
 One detail matters for the device tree. On the reference design, GPIO 29
@@ -913,6 +924,8 @@ NAND backup; this will be checked on the final export before publication.
 - The OpenWrt project and the authors of the Mercusys MR80X v2 and TP-Link
   Archer AX55 v1 support, which this port builds on.
 - The contributors to the OpenWrt forum thread on the MR80X v2.
+- The author of the [DNS Club review](https://club.dns-shop.ru/review/t-280-marshrutizatoryi/85194-obzor-domashnei-wi-fi-mesh-sistemyi-mercusys-halo-h80x-kompaktno/) of the Halo H80X,
+  for the additional device photographs.
 - `ath11k-bdencoder` from qca-swiss-army-knife, used to check the board data
   container format.
 - Mercusys, for publishing the GPL source of the H80X firmware.
