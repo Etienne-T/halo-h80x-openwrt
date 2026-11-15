@@ -2,7 +2,7 @@
 		# Écrire la banque inactive, puis le drapeau.
 		# U-Boot ne lit pas 0:BOOTCONFIG. Seule la chaîne "1" sélectionne
 		# rootfs_1. Absente, "0" ou toute autre valeur : argument 0, rootfs
-		# dans la branche de carte 2 / 0xB (tâche B).
+		# dans la branche de carte 2 / 0xB.
 		# Pas de compteur. Un noyau qui démarre puis plante ne revient pas
 		# tout seul. La récupération est le httpd d'U-Boot, avant Linux.
 		# Limite : U-Boot lit d'abord boot_idx, prioritaire sur tp_boot_idx.

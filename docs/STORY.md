@@ -6,20 +6,13 @@
 > **About this text.** This story was written by AI agents from the project's
 > journal and test reports. Other AI agents checked it claim by claim. It
 > will be reviewed by the repository owner before publication. It describes
-> the software work as it stood on **13 November 2026**. Owner-supplied
-> photographs and disassembly details from two units were added on
-> **14 November 2026**.
+> the software work as it stood on **13 November 2026**, with later
+> owner-supplied photographs and a follow-up on factory-setup access tests
+> (section 7).
 >
 > It is **not** official OpenWrt documentation or support. The Halo H80X is not
 > an OpenWrt-supported device, nothing described here has been submitted to the
 > OpenWrt project, and the OpenWrt tests described here used **a single unit**.
-
-> **Warning: serial voltage.** On the first unit, a multimeter read about
-> **1.8 V** between `GND` and `TX` and **3.3 V** between `GND` and `VCC`.
-> `VCC` is a supply pad, not the logic level: never connect it. The
-> photographed FTDI FT232RNL adapter has its voltage jumper set to `1V8`.
-> **3.3 V logic has not been validated.** Measure the pads on your own unit
-> before connecting anything.
 
 ## In short
 
@@ -320,8 +313,9 @@ OpenWrt.
 **Administration services.** Administration components are present in the
 stock image. Apart from the SSH server observed on one unit (next
 subsection), their accessibility has not been validated, and no
-installation route through them has been found. Testing passwords and
-bypassing authentication were deliberately out of scope.
+installation route through them had been found in that initial study.
+Password tests and authentication bypasses were outside its scope;
+the later factory-setup investigation is described below.
 
 **Conclusion.** A later survey of the methods used on related TP-Link and
 Mercusys devices reached the same verdict: installing without the serial
@@ -348,8 +342,27 @@ The root entry in `/etc/shadow` is identical in the four stock firmware
 versions examined (1.0.0 to 1.1.3). It is also identical to the hash quoted
 in a [public Reddit thread](https://www.reddit.com/r/hacking/comments/fsh9qx/cracking_a_hash_with_a_strange_salt/)
 about a TP-Link Deco M9+. Commenters there report the same value on other
-TP-Link products. This project did not try to recover the password and did
-not log in.
+TP-Link products. That initial study did not try to recover the password and did not log in.
+The later, separate access attempts below also obtained no shell.
+
+### Follow-up: factory-reset setup, 14–15 November 2026
+
+A later investigation tested whether a factory-reset Halo, in its stock setup
+state and advertising firmware 1.1.3, could be accessed and installed through
+software alone. It covered TDP discovery, stock SSH authentication, TMP
+pairing, TDDP production-mode checks, session-protected web handlers, older
+firmware and the application's setup flow. A corrected radio capture showed
+discovery traffic and no local SSH session during the observed completed
+setup; a WAN/cloud continuation is an interpretation, not a decoded exchange.
+None of these paths opened a system session, installed an authorised key or
+wrote a firmware image.
+
+The [factory-reset investigation note](FACTORY-RESET-INVESTIGATION.md) records
+the outcomes, capture limitations and unresolved questions, and distinguishes
+ordinary factory setup from U-Boot recovery. These results were reported from
+a private log (`BILAN.md`), not retested for this documentation update. No
+software-only installation was demonstrated; that does not prove one is
+impossible in every configuration.
 
 ## 8. The port
 
@@ -831,8 +844,7 @@ small hole on the rear panel.
 possible. The repository is prepared with CC0-1.0 for documentation and
 photos, MIT-0 for original code, and the original licence for files derived
 from OpenWrt; see [LICENSING.md](LICENSING.md). The owner-supplied photographs
-are CC0-1.0, copyright Etienne-T. Final owner review of the export remains
-pending.
+are CC0-1.0, copyright Etienne-T.
 
 Files derived from OpenWrt keep their original licence. For example, the
 device tree carries `GPL-2.0-or-later OR MIT`. The public

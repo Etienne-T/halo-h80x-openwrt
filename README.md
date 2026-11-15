@@ -55,6 +55,7 @@ Wi-Fi support. See [Wi-Fi and BDF provenance](docs/WIFI-BDF.md).
 - [Source provenance and known upgrade risks](docs/PROVENANCE.md)
 - [Local tools and manifest-based verification](docs/TOOLS.md)
 - [Project story](docs/STORY.md)
+- [Factory-reset access investigation, 14–15 November 2026](docs/FACTORY-RESET-INVESTIGATION.md)
 - [Installable source set](openwrt/install/README.md)
 
 Text and code were largely produced by AI agents under the owner's direction,

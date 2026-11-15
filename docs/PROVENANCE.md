@@ -36,7 +36,7 @@ does not prove an invalid CRC. The case also interprets a failed
 It also derives the active bank from `tp_boot_idx` alone and assumes that
 `boot_idx`, which U-Boot reads first, is absent; it does not check this.
 Stop on environment read errors; a complete code fix and stub tests remain
-work for the upgrade-review lot. The historical first installation does not
+future work. The historical first installation does not
 validate every environment state or both alternating bank directions.
 
 The NAND patch propagates write command failures and gates bank switching on
